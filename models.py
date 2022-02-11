@@ -20,6 +20,6 @@ class MeterType(Base):
     uuid = Column(String)
     name = Column(String)
     description = Column(String)
-    customer_id = Column(Integer, ForeignKey("customers.id"))
+    customer_id = Column(Integer, ForeignKey("customers.id", ondelete="CASCADE", onupdate='CASCADE'))
 
 

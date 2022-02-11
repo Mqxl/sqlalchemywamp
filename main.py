@@ -9,7 +9,7 @@ from schema import Customer as SchemaCustomer
 from models import MeterType as ModelMeterType
 from schema import MeterType as SchemaMeterType
 from dotenv import load_dotenv
-
+from fastapi.responses import HTMLResponse
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 load_dotenv(os.path.join(BASE_DIR, "alembic/.env"))
@@ -95,6 +95,3 @@ async def put_customer(id: int, customer: SchemaCustomer):
 @app.post('/meter/type/{id}', response_model=List[SchemaMeterType])
 async def search_meter(id: int):
     return db.session.query(ModelMeterType).filter(ModelMeterType.customer_id == id).all()
-
-if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
