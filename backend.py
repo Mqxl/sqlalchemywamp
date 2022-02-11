@@ -6,10 +6,19 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import create_engine
 from autobahn.asyncio.wamp import ApplicationSession, ApplicationRunner
 from sqlalchemy.orm import sessionmaker
-db_string = "postgresql+psycopg2://postgres:postgres@0.0.0.0/postgres"
 
-db = create_engine(db_string)
+
+class Postgre(object):
+    def connect(self):
+        db_string = "postgresql+psycopg2://postgres:postgres@0.0.0.0/postgres"
+        db = create_engine(db_string)
+        return db
+
+
+
+
 Base = declarative_base()
+
 
 
 class Customer(Base):
@@ -31,43 +40,46 @@ class MeterType(Base):
     customer_id = Column(Integer, ForeignKey("customers.id", ondelete="CASCADE", onupdate='CASCADE'))
 
 
-Session = sessionmaker(db)
-session = Session()
-Base.metadata.create_all(db)
+
 
 
 class Component(ApplicationSession):
 
     async def onJoin(self, details):
         class Database(object):
-            async def insert(self, id, uuid, name, email):
-                return await Customer(id=id, uuid=uuid, name=name, email=email)
+            con = Postgre()
+            Session = sessionmaker(con.connect())
+            session = Session()
+            Base.metadata.create_all(con.connect())
 
-            async def meter(self, id, uuid, name, description, customer_id):
-                return await MeterType(id=id, uuid=uuid, name=name, description=description, customer_id=customer_id)
+            def insert(id, uuid, name, email):
+                return Customer(id=id, uuid=uuid, name=name, email=email)
 
-            async def update_cust(self, id, uuid, name, email, customerid):
-                return await session.query(Customer).filter(Customer.id == customerid).update(
+            def meter(id, uuid, name, description, customer_id):
+                return MeterType(id=id, uuid=uuid, name=name, description=description, customer_id=customer_id)
+
+            def update_cust(id, uuid, name, email, customerid):
+                return Database.session.query(Customer).filter(Customer.id == customerid).update(
                     {"id": id, "uuid": uuid, "name": name, "email": email})
 
-            async def update_meter(self, id, uuid, name, description, customerid, customer_id):
-                return await session.query(MeterType).filter(MeterType.id == customerid).update(
+            def update_meter(id, uuid, name, description, customerid, customer_id):
+                return Database.session.query(MeterType).filter(MeterType.id == customerid).update(
                     {"id": id, "uuid": uuid, "name": name, "description": description, "customer_id": customer_id})
 
-            async def detail_customer(self, id):
-                return await session.query(Customer).get(id)
+            def detail_customer(id):
+                return Database.session.query(Customer).get(id)
 
-            async def delete_customer(self, id):
-                return await session.query(Customer).filter(Customer.id == id).delete()
+            def delete_customer(id):
+                return Database.session.query(Customer).filter(Customer.id == id).delete()
 
-            async def delete_meter(self, id):
-                return await session.query(MeterType).filter(MeterType.id == id).all()
+            def delete_meter(id):
+                return Database.session.query(MeterType).filter(MeterType.id == id).all()
 
-            async def detail_meter(self, id):
-                return await session.query(MeterType).get(id)
+            def detail_meter(id):
+                return Database.session.query(MeterType).get(id)
 
-            async def find_meter(self, id):
-                return await session.query(MeterType).filter(MeterType.customer_id == id).all()
+            def find_meter(id):
+                return Database.session.query(MeterType).filter(MeterType.customer_id == id).all()
 
         class AlchemyEncoder(json.JSONEncoder):
 
@@ -89,26 +101,26 @@ class Component(ApplicationSession):
 
         async def post_customer(id, uuid, name, email):
 
-            session.add(Database.insert(id=id, uuid=uuid, name=name, email=email))
-            session.commit()
+            Database.session.add(Database.insert(id=id, uuid=uuid, name=name, email=email))
+            Database.session.commit()
 
             return 'success'
 
         async def post_meter(id, uuid, name, description, customer_id):
-            session.add(Database.meter(id=id, uuid=uuid, name=name, description=description, customer_id=customer_id))
-            session.commit()
+            Database.session.add(Database.meter(id=id, uuid=uuid, name=name, description=description, customer_id=customer_id))
+            Database.session.commit()
             return 'success'
 
         async def update_customer(customerid, id, uuid, name, email):
             await Database.update_cust(customerid=customerid, id=id, uuid=uuid, name=name, email=email)
 
-            session.commit()
+            Database.session.commit()
             return 'success'
 
         async def update_meter(customerid, id, uuid, name, description, customer_id):
             await Database.update_meter(
                 customerid=customerid, id=id, uuid=uuid, name=name, description=description, customer_id=customer_id)
-            session.commit()
+            Database.session.commit()
 
             return 'success'
 
@@ -117,12 +129,12 @@ class Component(ApplicationSession):
 
         async def delete_customer(id):
             await Database.delete_customer(id)
-            session.commit()
+            Database.session.commit()
             return 'Deleted'
 
         async def delete_meter(id):
             await Database.delete_meter(id)
-            session.commit()
+            Database.session.commit()
             return 'Deleted'
 
         async def detail_meter(id):
