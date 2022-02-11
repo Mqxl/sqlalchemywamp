@@ -40,36 +40,38 @@ class Component(ApplicationSession):
 
     async def onJoin(self, details):
         class Database(object):
-            def insert(id, uuid, name, email):
-                return Customer(id=id, uuid=uuid, name=name, email=email)
+            async def insert(self, id, uuid, name, email):
+                return await Customer(id=id, uuid=uuid, name=name, email=email)
 
-            def meter(id, uuid, name, description, customer_id):
-                return MeterType(id=id, uuid=uuid, name=name, description=description, customer_id=customer_id)
+            async def meter(self, id, uuid, name, description, customer_id):
+                return await MeterType(id=id, uuid=uuid, name=name, description=description, customer_id=customer_id)
 
-            def update_cust(id, uuid, name, email, customerid):
-                return session.query(Customer).filter(Customer.id == customerid).update({"id": id, "uuid": uuid, "name": name, "email": email})
+            async def update_cust(self, id, uuid, name, email, customerid):
+                return await session.query(Customer).filter(Customer.id == customerid).update(
+                    {"id": id, "uuid": uuid, "name": name, "email": email})
 
-            def update_meter(id, uuid, name, description, customerid, customer_id):
-                return session.query(MeterType).filter(MeterType.id == customerid).update({"id": id, "uuid": uuid, "name": name, "description": description, "customer_id": customer_id})
+            async def update_meter(self, id, uuid, name, description, customerid, customer_id):
+                return await session.query(MeterType).filter(MeterType.id == customerid).update(
+                    {"id": id, "uuid": uuid, "name": name, "description": description, "customer_id": customer_id})
 
-            def detail_customer(id):
-                return session.query(Customer).get(id)
+            async def detail_customer(self, id):
+                return await session.query(Customer).get(id)
 
-            def delete_customer(id):
-                return session.query(Customer).filter(Customer.id == id).delete()
+            async def delete_customer(self, id):
+                return await session.query(Customer).filter(Customer.id == id).delete()
 
-            def delete_meter(id):
-                return session.query(MeterType).filter(MeterType.id == id).all()
+            async def delete_meter(self, id):
+                return await session.query(MeterType).filter(MeterType.id == id).all()
 
-            def detail_meter(id):
-                return session.query(MeterType).get(id)
+            async def detail_meter(self, id):
+                return await session.query(MeterType).get(id)
 
-            def find_meter(id):
-                return session.query(MeterType).filter(MeterType.customer_id == id).all()
+            async def find_meter(self, id):
+                return await session.query(MeterType).filter(MeterType.customer_id == id).all()
 
         class AlchemyEncoder(json.JSONEncoder):
 
-            def default(self, obj):
+            async def default(self, obj):
                 if isinstance(obj.__class__, DeclarativeMeta):
 
                     fields = {}
@@ -85,47 +87,48 @@ class Component(ApplicationSession):
 
                 return json.JSONEncoder.default(self, obj)
 
-        def post_customer(id, uuid, name, email):
+        async def post_customer(id, uuid, name, email):
 
             session.add(Database.insert(id=id, uuid=uuid, name=name, email=email))
             session.commit()
 
             return 'success'
 
-        def post_meter(id, uuid, name, description, customer_id):
+        async def post_meter(id, uuid, name, description, customer_id):
             session.add(Database.meter(id=id, uuid=uuid, name=name, description=description, customer_id=customer_id))
             session.commit()
             return 'success'
 
-        def update_customer(customerid ,id, uuid, name, email):
-            Database.update_cust(customerid=customerid, id=id, uuid=uuid, name=name, email=email)
+        async def update_customer(customerid, id, uuid, name, email):
+            await Database.update_cust(customerid=customerid, id=id, uuid=uuid, name=name, email=email)
 
             session.commit()
             return 'success'
 
-        def update_meter(customerid ,id, uuid, name, description, customer_id):
-            Database.update_meter(customerid=customerid, id=id, uuid=uuid, name=name, description=description, customer_id=customer_id)
+        async def update_meter(customerid, id, uuid, name, description, customer_id):
+            await Database.update_meter(
+                customerid=customerid, id=id, uuid=uuid, name=name, description=description, customer_id=customer_id)
             session.commit()
 
             return 'success'
 
-        def detail_customer(id):
+        async def detail_customer(id):
             return json.dumps(Database.detail_customer(id=id), cls=AlchemyEncoder)
 
-        def delete_customer(id):
-            Database.delete_customer(id)
+        async def delete_customer(id):
+            await Database.delete_customer(id)
             session.commit()
             return 'Deleted'
 
-        def delete_meter(id):
-            Database.delete_meter(id)
+        async def delete_meter(id):
+            await Database.delete_meter(id)
             session.commit()
             return 'Deleted'
 
-        def detail_meter(id):
+        async def detail_meter(id):
             return json.dumps(Database.detail_meter(id), cls=AlchemyEncoder)
 
-        def find_meter(id):
+        async def find_meter(id):
             return json.dumps(Database.find_meter(id), cls=AlchemyEncoder)
 
         await self.register(post_customer, 'com.arguments.post_customer')

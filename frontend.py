@@ -1,12 +1,9 @@
 import asyncio
-import json
 from os import environ
 from autobahn.asyncio.wamp import ApplicationSession, ApplicationRunner
-from sqlalchemy.ext.declarative import DeclarativeMeta
 
 
 class Component(ApplicationSession):
-
 
     async def onJoin(self, details):
         check = input()
@@ -49,7 +46,8 @@ class Component(ApplicationSession):
             description = input()
             print('Write customer_id:')
             customer_id = input()
-            starred = await self.call('com.arguments.update_meter', customerid, id, uuid, name, description, customer_id)
+            starred = await self.call('com.arguments.update_meter', customerid, id, uuid, name, description,
+                                      customer_id)
             print("Post complete: {}".format(starred))
             self.leave()
         elif check == 'update customer':
