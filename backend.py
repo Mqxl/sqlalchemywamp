@@ -39,6 +39,34 @@ Base.metadata.create_all(db)
 class Component(ApplicationSession):
 
     async def onJoin(self, details):
+        class Database(object):
+            def insert(id, uuid, name, email):
+                return Customer(id=id, uuid=uuid, name=name, email=email)
+
+            def meter(id, uuid, name, description, customer_id):
+                return MeterType(id=id, uuid=uuid, name=name, description=description, customer_id=customer_id)
+
+            def update_cust(id, uuid, name, email, customerid):
+                return session.query(Customer).filter(Customer.id == customerid).update({"id": id, "uuid": uuid, "name": name, "email": email})
+
+            def update_meter(id, uuid, name, description, customerid, customer_id):
+                return session.query(MeterType).filter(MeterType.id == customerid).update({"id": id, "uuid": uuid, "name": name, "description": description, "customer_id": customer_id})
+
+            def detail_customer(id):
+                return session.query(Customer).get(id)
+
+            def delete_customer(id):
+                return session.query(Customer).filter(Customer.id == id).delete()
+
+            def delete_meter(id):
+                return session.query(MeterType).filter(MeterType.id == id).all()
+
+            def detail_meter(id):
+                return session.query(MeterType).get(id)
+
+            def find_meter(id):
+                return session.query(MeterType).filter(MeterType.customer_id == id).all()
+
         class AlchemyEncoder(json.JSONEncoder):
 
             def default(self, obj):
@@ -58,56 +86,47 @@ class Component(ApplicationSession):
                 return json.JSONEncoder.default(self, obj)
 
         def post_customer(id, uuid, name, email):
-            insert = Customer(id=id, uuid=uuid, name=name, email=email)
-            session.add(insert)
+
+            session.add(Database.insert(id=id, uuid=uuid, name=name, email=email))
             session.commit()
 
             return 'success'
 
         def post_meter(id, uuid, name, description, customer_id):
-            insert = MeterType(id=id, uuid=uuid, name=name, description=description, customer_id=customer_id)
-            session.add(insert)
+            session.add(Database.meter(id=id, uuid=uuid, name=name, description=description, customer_id=customer_id))
             session.commit()
-
             return 'success'
 
         def update_customer(customerid ,id, uuid, name, email):
-            session.query(Customer).filter(Customer.id == customerid).update({"id": id, "uuid": uuid, "name": name, "email": email})
-            session.commit()
+            Database.update_cust(customerid=customerid, id=id, uuid=uuid, name=name, email=email)
 
+            session.commit()
             return 'success'
 
         def update_meter(customerid ,id, uuid, name, description, customer_id):
-            session.query(MeterType).filter(Customer.id == customerid).update({"id": id, "uuid": uuid, "name": name, "description": description, "customer_id": customer_id})
+            Database.update_meter(customerid=customerid, id=id, uuid=uuid, name=name, description=description, customer_id=customer_id)
             session.commit()
 
             return 'success'
 
-
-
         def detail_customer(id):
-
-            get = session.query(Customer).get(id)
-            return json.dumps(get, cls=AlchemyEncoder)
+            return json.dumps(Database.detail_customer(id=id), cls=AlchemyEncoder)
 
         def delete_customer(id):
-            session.query(Customer).filter(Customer.id == id).delete()
+            Database.delete_customer(id)
             session.commit()
             return 'Deleted'
 
         def delete_meter(id):
-            session.query(MeterType).filter(MeterType.id == id).all()
+            Database.delete_meter(id)
             session.commit()
             return 'Deleted'
 
-
         def detail_meter(id):
-            get = session.query(MeterType).get(id)
-            return json.dumps(get, cls=AlchemyEncoder)
+            return json.dumps(Database.detail_meter(id), cls=AlchemyEncoder)
 
         def find_meter(id):
-            get = session.query(MeterType).filter(MeterType.customer_id == id).all()
-            return json.dumps(get, cls=AlchemyEncoder)
+            return json.dumps(Database.find_meter(id), cls=AlchemyEncoder)
 
         await self.register(post_customer, 'com.arguments.post_customer')
         await self.register(post_meter, 'com.arguments.post_meter')
