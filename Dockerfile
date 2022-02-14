@@ -8,7 +8,9 @@ ENV PYTHONUNBUFFERED 1
 WORKDIR /code/
 
 # Install dependencies
+RUN pip install --upgrade pip
 RUN pip install psycopg2
+RUN pip install asyncpg
 RUN pip install uvicorn
 RUN pip install pipenv
 COPY Pipfile Pipfile.lock /code/

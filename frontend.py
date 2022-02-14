@@ -1,7 +1,10 @@
 import asyncio
+import sys
+from jsonencoder import *
 from os import environ
 from autobahn.asyncio.wamp import ApplicationSession, ApplicationRunner
-
+import pprint
+import requests
 
 class Component(ApplicationSession):
 
@@ -68,28 +71,28 @@ class Component(ApplicationSession):
             print('customer id')
             id = input()
             starred = await self.call('com.arguments.delete_customer', id)
-            print("Post complete: {}".format(starred))
+            print("Deleted: {}".format(starred))
             self.leave()
 
         elif check == 'delete meter':
             print('meter id')
             id = input()
             starred = await self.call('com.arguments.delete_meter', id)
-            print("Post complete: {}".format(starred))
+            print("Deleted: {}".format(starred))
             self.leave()
 
         elif check == 'detail customer':
             print('Write id:')
             id = input()
             starred = await self.call('com.arguments.detail_customer', id)
-            print("Detail: {}".format(starred))
+            print("Customer name: {}".format(starred))
             self.leave()
 
         elif check == 'detail meter':
             print('Write id:')
             id = input()
             starred = await self.call('com.arguments.detail_meter', id)
-            print("Detail: {}".format(starred))
+            print("Meter name: {}".format(starred))
             self.leave()
 
         elif check == 'find meter':

@@ -12,6 +12,9 @@ class Customer(Base):
     name = Column(String, unique=True)
     email = Column(String, unique=True)
 
+    class Config:
+        orm_mode = True
+
 
 class MeterType(Base):
     __tablename__ = "meter-types"
@@ -21,5 +24,8 @@ class MeterType(Base):
     name = Column(String)
     description = Column(String)
     customer_id = Column(Integer, ForeignKey("customers.id", ondelete="CASCADE", onupdate='CASCADE'))
+
+    class Config:
+        orm_mode = True
 
 
